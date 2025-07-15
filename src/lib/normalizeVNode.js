@@ -1,3 +1,37 @@
+// 안전장치 역할
+// vnode를 생성할때 1차적으로 필터링을 해줌 . 컴포넌트를 노드로 변환하는 역할
 export function normalizeVNode(vNode) {
+  if (vNode === null || vNode === undefined || vNode === false || vNode === true) {
+    return "";
+  }
+  if (typeof vNode === "string" || typeof vNode === "number") {
+    return vNode + "";
+  }
+
+  // vNode가 객체인 경우 (함수형 컴포넌트 또는 일반 엘리먼트)
+  if (typeof vNode === "object" && vNode) {
+    // 함수형 컴포넌트인 경우
+    if (typeof vNode.type === "function") {
+      console.log("케이스2: JSX 함수형 컴포넌트", vNode.type.name); //이 경우 type에 함수(UnorderedList 이런값)가 들어감
+      console.log("props:", vNode.props);
+      console.log("children:", vNode.children);
+
+      // children을 props에 포함시켜서 함수에 전달
+      const propsWithChildren = {
+        ...(vNode.props || {}),
+        children: vNode.children,
+      };
+      return normalizeVNode(vNode.type(propsWithChildren));
+    }
+
+    // 일반 엘리먼트인 경우 children 정규화
+    if (vNode.type && vNode.children) {
+      console.log("케이스3: 일반 HTML 태그", vNode.type);
+      return {
+        ...vNode,
+        children: vNode.children.map((child) => normalizeVNode(child)).filter((child) => child !== ""),
+      };
+    }
+  }
   return vNode;
 }
