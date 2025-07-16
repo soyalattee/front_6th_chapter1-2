@@ -45,6 +45,8 @@ function updateAttributes($el, props) {
       addEvent($el, "focus", value);
     } else if (key === "onKeyDown") {
       addEvent($el, "keydown", value);
+    } else if (key === "onChange") {
+      addEvent($el, "change", value);
     } else {
       $el.setAttribute(key, value);
     }
