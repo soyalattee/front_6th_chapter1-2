@@ -12,10 +12,6 @@ export function normalizeVNode(vNode) {
   if (typeof vNode === "object" && vNode) {
     // 함수형 컴포넌트인 경우
     if (typeof vNode.type === "function") {
-      console.log("케이스2: JSX 함수형 컴포넌트", vNode.type.name); //이 경우 type에 함수(UnorderedList 이런값)가 들어감
-      console.log("props:", vNode.props);
-      console.log("children:", vNode.children);
-
       // children을 props에 포함시켜서 함수에 전달
       const propsWithChildren = {
         ...(vNode.props || {}),
@@ -26,7 +22,6 @@ export function normalizeVNode(vNode) {
 
     // 일반 엘리먼트인 경우 children 정규화
     if (vNode.type && vNode.children) {
-      console.log("케이스3: 일반 HTML 태그", vNode.type);
       return {
         ...vNode,
         children: vNode.children.map((child) => normalizeVNode(child)).filter((child) => child !== ""),
