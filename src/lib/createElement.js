@@ -1,10 +1,14 @@
 import { addEvent } from "./eventManager";
+import { escapeHTML } from "../utils";
 
 export function createElement(vNode) {
   if (vNode === null || vNode === undefined || vNode === false || vNode === true) {
     return { nodeType: Node.TEXT_NODE, textContent: "" };
   }
-  if (typeof vNode === "string" || typeof vNode === "number") {
+  if (typeof vNode === "string") {
+    return { nodeType: Node.TEXT_NODE, textContent: vNode };
+  }
+  if (typeof vNode === "number") {
     return { nodeType: Node.TEXT_NODE, textContent: vNode + "" };
   }
 
@@ -27,7 +31,7 @@ export function createElement(vNode) {
     if (child.type) {
       el.appendChild(createElement(child));
     } else {
-      el.innerHTML += child;
+      el.innerHTML += escapeHTML(child);
     }
   });
   return el;

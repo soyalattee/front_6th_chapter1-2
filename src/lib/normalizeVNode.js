@@ -4,8 +4,11 @@ export function normalizeVNode(vNode) {
   if (vNode === null || vNode === undefined || vNode === false || vNode === true) {
     return "";
   }
-  if (typeof vNode === "string" || typeof vNode === "number") {
+  if (typeof vNode === "number") {
     return vNode + "";
+  }
+  if (typeof vNode === "string") {
+    return vNode;
   }
 
   // vNode가 객체인 경우 (함수형 컴포넌트 또는 일반 엘리먼트)

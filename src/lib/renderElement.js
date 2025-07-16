@@ -22,10 +22,8 @@ export function renderElement(vNode, container) {
     // 업데이트: updateElement로 기존 DOM 업데이트
     console.log("업데이트 렌더링");
     // const prevNormalizedVNode = normalizeVNode(container._prevVNode);
-    const $el = createElement(normalizedVNode);
-    container.innerHTML = "";
-    container.appendChild($el);
-    // updateElement(container, $el, prevNormalizedVNode);
+    container.replaceChild(createElement(normalizedVNode), container.firstChild);
+    // updateElement(container, normalizedVNode, prevNormalizedVNode);
 
     // 새로운 vNode로 업데이트
     container._prevVNode = vNode;
