@@ -1,4 +1,4 @@
-//import { addEvent } from "./eventManager";
+import { addEvent } from "./eventManager";
 
 export function createElement(vNode) {
   if (vNode === null || vNode === undefined || vNode === false || vNode === true) {
@@ -18,7 +18,6 @@ export function createElement(vNode) {
     console.log("컴포넌트를 직접 사용할 수 없습니다. 정규화 필요"); //안되는것같다.
     throw new Error("컴포넌트를 직접 사용할 수 없습니다. 정규화 필요");
   }
-
   const el = document.createElement(vNode.type);
   if (vNode.props) {
     updateAttributes(el, vNode.props);
@@ -38,6 +37,14 @@ function updateAttributes($el, props) {
   Object.entries(props).forEach(([key, value]) => {
     if (key === "className") {
       $el.setAttribute("class", value);
+    } else if (key === "onClick") {
+      addEvent($el, "click", value);
+    } else if (key === "onMouseOver") {
+      addEvent($el, "mouseover", value);
+    } else if (key === "onFocus") {
+      addEvent($el, "focus", value);
+    } else if (key === "onKeyDown") {
+      addEvent($el, "keydown", value);
     } else {
       $el.setAttribute(key, value);
     }
