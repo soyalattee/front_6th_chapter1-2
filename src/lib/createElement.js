@@ -51,6 +51,8 @@ function updateAttributes($el, props) {
       addEvent($el, "keydown", value);
     } else if (key === "onChange") {
       addEvent($el, "change", value);
+    } else if (key === "selected") {
+      value === true ? $el.setAttribute("selected", "") : $el.removeAttribute("selected");
     } else {
       $el.setAttribute(key, value);
     }
