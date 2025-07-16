@@ -1,5 +1,4 @@
 import { addEvent } from "./eventManager";
-import { escapeHTML } from "../utils";
 
 export function createElement(vNode) {
   if (vNode === null || vNode === undefined || vNode === false || vNode === true) {
@@ -28,10 +27,13 @@ export function createElement(vNode) {
   }
 
   vNode.children.forEach((child) => {
-    if (child.type) {
+    if (child && typeof child === "object" && child.type) {
+      // vNode 객체인 경우 createElement로 재귀 처리
       el.appendChild(createElement(child));
     } else {
-      el.innerHTML += escapeHTML(child);
+      // 문자열, 숫자 등 primitive 값인 경우 텍스트 노드로 생성
+      const textNode = document.createTextNode(child || "");
+      el.appendChild(textNode);
     }
   });
   return el;
@@ -53,6 +55,8 @@ function updateAttributes($el, props) {
       addEvent($el, "change", value);
     } else if (key === "selected") {
       value === true ? $el.setAttribute("selected", "") : $el.removeAttribute("selected");
+    } else if (key === "checked") {
+      value === true ? $el.setAttribute("checked", "") : $el.removeAttribute("checked");
     } else {
       $el.setAttribute(key, value);
     }
