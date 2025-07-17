@@ -195,6 +195,8 @@ function updateAttributes(target, newProps, oldProps) {
         } else if (key === "onBlur") {
           if (oldValue) removeEvent(target, "blur", oldValue);
           addEvent(target, "blur", newValue);
+        } else if (typeof newValue === "boolean") {
+          newValue === true ? target.setAttribute(key, "") : target.removeAttribute(key);
         } else {
           target.setAttribute(key, newValue);
         }
