@@ -63,8 +63,6 @@ function updateAttributes(target, newProps, oldProps) {
 }
 
 export function updateElement(container, newNode, oldNode, index = 0) {
-  const currentElement = container.childNodes[index];
-
   // Case 1: 기존 노드 없음 -> 새 노드 추가
   if (!oldNode) {
     container.appendChild(createElement(newNode));
@@ -73,54 +71,76 @@ export function updateElement(container, newNode, oldNode, index = 0) {
 
   // Case 2: 새 노드 없음 -> 기존 노드 제거
   if (!newNode) {
+    const currentElement = container.childNodes[index];
     if (currentElement) {
       container.removeChild(currentElement);
     }
     return;
   }
 
-  // Case 3: 둘 다 문자열/숫자인 경우
-  if (typeof oldNode === "string" || typeof oldNode === "number") {
-    if (typeof newNode === "string" || typeof newNode === "number") {
-      if (oldNode !== newNode && currentElement) {
+  // Case 3. 둘 다 없음
+  if (!oldNode && !newNode) {
+    return;
+  }
+
+  const currentElement = container.childNodes[index];
+
+  // Case 4: 둘 다 문자열인 경우
+  if (typeof oldNode === "string" && typeof newNode === "string") {
+    if (oldNode !== newNode) {
+      if (currentElement && currentElement.nodeType === Node.TEXT_NODE) {
         currentElement.textContent = newNode;
+      } else {
+        currentElement
+          ? container.replaceChild(createElement(newNode), currentElement)
+          : container.appendChild(createElement(newNode));
       }
-    } else {
-      // 텍스트 -> 엘리먼트로 변경
-      container.replaceChild(createElement(newNode), currentElement);
     }
     return;
   }
 
-  if (typeof newNode === "string" || typeof newNode === "number") {
-    // 엘리먼트 -> 텍스트로 변경
-    const textNode = document.createTextNode(newNode + "");
-    container.replaceChild(textNode, currentElement);
-    return;
-  }
-
-  // Case 4: 노드 타입이 다름 -> 완전 교체
+  // Case 5: 노드 타입이 다름 -> 완전 교체 TODO: 문자 -> 객체, 객체->문자 별도로 해야하나?
   if (oldNode.type !== newNode.type) {
     container.replaceChild(createElement(newNode), currentElement);
     return;
   }
 
-  // Case 5: 같은 타입 -> 속성과 자식들 업데이트
+  // Case 6: 같은 타입 -> 속성과 자식들 업데이트
   if (oldNode.type === newNode.type) {
+    if (!currentElement) {
+      container.appendChild(createElement(newNode));
+      return;
+    }
+
     // 속성 업데이트
     updateAttributes(currentElement, newNode.props, oldNode.props);
 
-    // 자식 노드들 재귀적으로 업데이트
-    const maxLength = Math.max(
-      oldNode.children ? oldNode.children.length : 0,
-      newNode.children ? newNode.children.length : 0,
-    );
+    const oldChildrenLength = oldNode.children ? oldNode.children.length : 0;
+    const newChildrenLength = newNode.children ? newNode.children.length : 0;
+    const commonLength = Math.min(oldChildrenLength, newChildrenLength);
 
-    for (let i = 0; i < maxLength; i++) {
-      const oldChild = oldNode.children ? oldNode.children[i] : null;
-      const newChild = newNode.children ? newNode.children[i] : null;
+    for (let i = 0; i < commonLength; i++) {
+      const oldChild = oldNode.children[i];
+      const newChild = newNode.children[i];
 
       updateElement(currentElement, newChild, oldChild, i);
+    }
+
+    // 새로운 자식 추가
+    for (let i = commonLength; i < newChildrenLength; i++) {
+      const newChild = newNode.children[i];
+
+      updateElement(currentElement, newChild, null, i);
+    }
+
+    // 기존 자식 제거
+    if (oldChildrenLength > newChildrenLength) {
+      for (let i = oldChildrenLength - 1; i >= newChildrenLength; i--) {
+        const elementToRemove = currentElement.childNodes[i];
+        if (elementToRemove) {
+          currentElement.removeChild(elementToRemove);
+        }
+      }
     }
   }
 }
