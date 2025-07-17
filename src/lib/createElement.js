@@ -2,20 +2,24 @@ import { addEvent } from "./eventManager";
 
 export function createElement(vNode) {
   if (vNode === null || vNode === undefined || vNode === false || vNode === true) {
-    return { nodeType: Node.TEXT_NODE, textContent: "" };
+    const el = document.createTextNode("");
+    return el;
   }
   if (typeof vNode === "string") {
-    return { nodeType: Node.TEXT_NODE, textContent: vNode };
+    const el = document.createTextNode(vNode);
+    return el;
   }
   if (typeof vNode === "number") {
-    return { nodeType: Node.TEXT_NODE, textContent: vNode + "" };
+    const el = document.createTextNode(vNode + "");
+    return el;
   }
 
   if (Array.isArray(vNode)) {
-    return {
-      nodeType: Node.DOCUMENT_FRAGMENT_NODE,
-      childNodes: vNode.map((child) => createElement(child)),
-    };
+    const el = document.createDocumentFragment();
+    vNode.forEach((child) => {
+      el.appendChild(createElement(child));
+    });
+    return el;
   }
   if (typeof vNode === "function") {
     console.log("컴포넌트를 직접 사용할 수 없습니다. 정규화 필요"); //안되는것같다.
@@ -53,6 +57,10 @@ function updateAttributes($el, props) {
       addEvent($el, "keydown", value);
     } else if (key === "onChange") {
       addEvent($el, "change", value);
+    } else if (key === "selected") {
+      value === true ? $el.setAttribute("selected", "") : $el.removeAttribute("selected");
+    } else if (key === "checked") {
+      value === true ? $el.setAttribute("checked", "") : $el.removeAttribute("checked");
     } else if (typeof value === "boolean") {
       value === true ? $el.setAttribute(key, "") : $el.removeAttribute(key);
     } else {
