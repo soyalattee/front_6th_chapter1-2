@@ -195,6 +195,10 @@ function updateAttributes(target, newProps, oldProps) {
         } else if (key === "onBlur") {
           if (oldValue) removeEvent(target, "blur", oldValue);
           addEvent(target, "blur", newValue);
+        } else if (key === "checked") {
+          target.checked = newValue; // ✅ 프로퍼티로 설정
+        } else if (key === "selected") {
+          target.selected = newValue; // ✅ 프로퍼티로 설정
         } else if (typeof newValue === "boolean") {
           newValue === true ? target.setAttribute(key, "") : target.removeAttribute(key);
         } else {
