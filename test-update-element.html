@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UpdateElement 테스트</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin: 10px 0;
+      }
+      button {
+        margin: 5px;
+        padding: 10px;
+        cursor: pointer;
+      }
+      .highlight {
+        background-color: yellow;
+      }
+      .error {
+        color: red;
+      }
+      .success {
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>UpdateElement 테스트</h1>
+    <p>콘솔을 열어서 oldNode와 newNode의 차이를 확인하세요!</p>
+
+    <div class="container">
+      <h3>테스트 영역</h3>
+      <div id="test-container"></div>
+    </div>
+
+    <div class="container">
+      <h3>테스트 버튼들</h3>
+      <button onclick="testTextChange()">📝 텍스트 변경</button>
+      <button onclick="testPropsChange()">⚙️ Props 변경</button>
+      <button onclick="testTypeChange()">🏷️ 타입 변경</button>
+      <button onclick="testChildrenChange()">👥 자식 변경</button>
+      <button onclick="testAddRemove()">➕➖ 노드 추가/제거</button>
+      <button onclick="testComplexChange()">🔄 복합 변경</button>
+    </div>
+
+    <div class="container">
+      <h3>현재 상태</h3>
+      <pre id="current-state">초기 상태</pre>
+    </div>
+
+    <script type="module">
+      import { renderElement, createVNode } from "./src/lib/index.js";
+
+      const container = document.getElementById("test-container");
+      const statusEl = document.getElementById("current-state");
+      let currentState = "initial";
+
+      // 초기 렌더링
+      renderElement(createVNode("div", { className: "initial" }, "Hello World"), container);
+
+      // 상태 업데이트 함수
+      function updateStatus(newState) {
+        currentState = newState;
+        statusEl.textContent = `현재 상태: ${newState}`;
+      }
+
+      // 테스트 함수들을 전역에 등록
+      window.testTextChange = function () {
+        console.log("\n=== 📝 텍스트 변경 테스트 ===");
+        const newText = currentState === "textChanged" ? "Hello World" : "Updated Text!";
+        renderElement(createVNode("div", { className: "initial" }, newText), container);
+        updateStatus(currentState === "textChanged" ? "initial" : "textChanged");
+      };
+
+      window.testPropsChange = function () {
+        console.log("\n=== ⚙️ Props 변경 테스트 ===");
+        const newClass = currentState === "propsChanged" ? "initial" : "highlight";
+        renderElement(createVNode("div", { className: newClass, id: "test-div" }, "Hello World"), container);
+        updateStatus(currentState === "propsChanged" ? "initial" : "propsChanged");
+      };
+
+      window.testTypeChange = function () {
+        console.log("\n=== 🏷️ 타입 변경 테스트 ===");
+        const tag = currentState === "typeChanged" ? "div" : "span";
+        renderElement(createVNode(tag, { className: "initial" }, "Hello World"), container);
+        updateStatus(currentState === "typeChanged" ? "initial" : "typeChanged");
+      };
+
+      window.testChildrenChange = function () {
+        console.log("\n=== 👥 자식 변경 테스트 ===");
+        if (currentState === "childrenChanged") {
+          renderElement(createVNode("div", { className: "initial" }, "Single Child"), container);
+          updateStatus("initial");
+        } else {
+          renderElement(
+            createVNode(
+              "div",
+              { className: "initial" },
+              createVNode("span", null, "Child 1"),
+              createVNode("span", null, "Child 2"),
+              createVNode("span", null, "Child 3"),
+            ),
+            container,
+          );
+          updateStatus("childrenChanged");
+        }
+      };
+
+      window.testAddRemove = function () {
+        console.log("\n=== ➕➖ 노드 추가/제거 테스트 ===");
+        if (currentState === "nodeAdded") {
+          renderElement(createVNode("div", { className: "initial" }, "Original"), container);
+          updateStatus("initial");
+        } else {
+          renderElement(
+            createVNode("div", { className: "initial" }, "Original", createVNode("p", null, "Added Node!")),
+            container,
+          );
+          updateStatus("nodeAdded");
+        }
+      };
+
+      window.testComplexChange = function () {
+        console.log("\n=== 🔄 복합 변경 테스트 ===");
+        if (currentState === "complexChanged") {
+          renderElement(createVNode("div", { className: "initial" }, "Simple"), container);
+          updateStatus("initial");
+        } else {
+          renderElement(
+            createVNode(
+              "section",
+              { className: "success", id: "complex" },
+              createVNode("h2", null, "Complex Structure"),
+              createVNode(
+                "ul",
+                null,
+                createVNode("li", null, "Item 1"),
+                createVNode("li", null, "Item 2"),
+                createVNode("li", { className: "error" }, "Item 3"),
+              ),
+              createVNode("button", { onClick: () => alert("Clicked!") }, "Click Me"),
+            ),
+            container,
+          );
+          updateStatus("complexChanged");
+        }
+      };
+
+      updateStatus("initial");
+    </script>
+  </body>
+</html>

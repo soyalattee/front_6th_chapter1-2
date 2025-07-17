@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DOM 불일치 테스트</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin: 10px 0;
+      }
+      button {
+        margin: 5px;
+        padding: 10px;
+        cursor: pointer;
+      }
+      .error {
+        color: red;
+        background: #ffe6e6;
+        padding: 10px;
+        margin: 5px 0;
+      }
+      .warning {
+        color: orange;
+        background: #fff3e0;
+        padding: 10px;
+        margin: 5px 0;
+      }
+      .info {
+        color: blue;
+        background: #e3f2fd;
+        padding: 10px;
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>oldNode와 실제 DOM 불일치 테스트</h1>
+
+    <div class="container">
+      <h3>테스트 영역</h3>
+      <div id="test-container"></div>
+    </div>
+
+    <div class="container">
+      <h3>테스트 케이스들</h3>
+      <button onclick="testInitialVsUpdate()">🏗️ 최초 vs 업데이트 차이</button>
+      <button onclick="testExternalDOMManipulation()">🔧 외부 DOM 조작</button>
+      <button onclick="testFailedUpdate()">💥 업데이트 실패 시뮬레이션</button>
+      <button onclick="testFragmentHandling()">📦 Fragment 처리</button>
+      <button onclick="testMultipleUpdates()">⚡ 빠른 연속 업데이트</button>
+      <button onclick="reset()">🔄 리셋</button>
+    </div>
+
+    <div class="container">
+      <h3>현재 상태</h3>
+      <div id="status"></div>
+    </div>
+
+    <script type="module">
+      import { renderElement, createVNode } from "./src/lib/index.js";
+
+      const container = document.getElementById("test-container");
+      const statusEl = document.getElementById("status");
+
+      function updateStatus(message, type = "info") {
+        const div = document.createElement("div");
+        div.className = type;
+        div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+        statusEl.appendChild(div);
+        statusEl.scrollTop = statusEl.scrollHeight;
+      }
+
+      function inspectDOM() {
+        console.log("=== DOM 검사 ===");
+        console.log("container.childNodes:", container.childNodes);
+        console.log("container.children:", container.children);
+        console.log("container.innerHTML:", container.innerHTML);
+        console.log("container._prevVNode:", container._prevVNode);
+      }
+
+      // 1. 최초 렌더링 vs 업데이트의 차이
+      window.testInitialVsUpdate = function () {
+        console.log("\n=== 🏗️ 최초 vs 업데이트 차이 테스트 ===");
+        updateStatus("최초 렌더링 vs 업데이트 차이 테스트 시작");
+
+        // 최초 렌더링
+        console.log("1. 최초 렌더링");
+        renderElement(
+          createVNode(
+            "div",
+            { id: "root" },
+            createVNode("span", null, "Child 1"),
+            createVNode("span", null, "Child 2"),
+          ),
+          container,
+        );
+        inspectDOM();
+        updateStatus("최초 렌더링 완료 - 콘솔에서 DOM 구조 확인");
+
+        // 잠시 후 업데이트
+        setTimeout(() => {
+          console.log("2. 업데이트 렌더링");
+          renderElement(
+            createVNode(
+              "div",
+              { id: "root" },
+              createVNode("span", null, "Updated Child 1"),
+              createVNode("span", null, "Updated Child 2"),
+              createVNode("span", null, "New Child 3"),
+            ),
+            container,
+          );
+          inspectDOM();
+          updateStatus("업데이트 렌더링 완료 - oldNode와 실제 DOM 비교");
+        }, 1000);
+      };
+
+      // 2. 외부 DOM 조작으로 인한 불일치
+      window.testExternalDOMManipulation = function () {
+        console.log("\n=== 🔧 외부 DOM 조작 테스트 ===");
+        updateStatus("외부 DOM 조작 테스트 시작");
+
+        // 초기 렌더링
+        renderElement(
+          createVNode("div", null, createVNode("p", null, "Original"), createVNode("p", null, "Content")),
+          container,
+        );
+        updateStatus("초기 렌더링 완료");
+
+        setTimeout(() => {
+          // 외부에서 DOM 직접 조작
+          console.log("외부에서 DOM 직접 조작");
+          const firstP = container.querySelector("p");
+          if (firstP) {
+            firstP.remove(); // DOM에서 직접 제거
+            updateStatus("첫 번째 p 태그를 DOM에서 직접 제거", "warning");
+          }
+
+          setTimeout(() => {
+            // Virtual DOM 업데이트 (실제 DOM과 불일치 상태에서)
+            console.log("Virtual DOM 업데이트 시도");
+            renderElement(
+              createVNode(
+                "div",
+                null,
+                createVNode("p", null, "Updated Original"),
+                createVNode("p", null, "Updated Content"),
+              ),
+              container,
+            );
+            updateStatus("Virtual DOM 업데이트 완료 - oldNode와 실제 DOM 불일치 발생", "error");
+            inspectDOM();
+          }, 1000);
+        }, 1000);
+      };
+
+      // 3. 업데이트 실패 시뮬레이션
+      window.testFailedUpdate = function () {
+        console.log("\n=== 💥 업데이트 실패 시뮬레이션 ===");
+        updateStatus("업데이트 실패 시뮬레이션 시작");
+
+        renderElement(createVNode("div", null, "Initial"), container);
+
+        setTimeout(() => {
+          // updateElement 함수를 일시적으로 오류 발생시키기
+          const originalUpdateElement = window.updateElement;
+
+          // 일부러 에러 발생
+          try {
+            renderElement(createVNode("div", null, "Should Fail"), container);
+          } catch (error) {
+            updateStatus("업데이트 실패 시뮬레이션 - 실제로는 에러가 발생하지 않을 수 있음", "warning");
+          }
+
+          setTimeout(() => {
+            renderElement(createVNode("div", null, "Recovery Attempt"), container);
+            updateStatus("복구 시도 완료");
+            inspectDOM();
+          }, 1000);
+        }, 1000);
+      };
+
+      // 4. Fragment 처리 테스트
+      window.testFragmentHandling = function () {
+        console.log("\n=== 📦 Fragment 처리 테스트 ===");
+        updateStatus("Fragment 처리 테스트 시작");
+
+        // 배열을 사용한 렌더링 (Fragment 생성)
+        renderElement(
+          [
+            createVNode("div", null, "Fragment Child 1"),
+            createVNode("div", null, "Fragment Child 2"),
+            createVNode("div", null, "Fragment Child 3"),
+          ],
+          container,
+        );
+
+        updateStatus("Fragment로 초기 렌더링 완료");
+        inspectDOM();
+
+        setTimeout(() => {
+          // 단일 요소로 업데이트
+          renderElement(createVNode("div", null, "Single Element"), container);
+          updateStatus("단일 요소로 업데이트 완료 - Fragment vs Element 구조 차이");
+          inspectDOM();
+        }, 2000);
+      };
+
+      // 5. 빠른 연속 업데이트
+      window.testMultipleUpdates = function () {
+        console.log("\n=== ⚡ 빠른 연속 업데이트 테스트 ===");
+        updateStatus("빠른 연속 업데이트 테스트 시작");
+
+        let counter = 0;
+        const interval = setInterval(() => {
+          counter++;
+          renderElement(createVNode("div", null, `Count: ${counter}`), container);
+
+          if (counter >= 5) {
+            clearInterval(interval);
+            updateStatus("빠른 연속 업데이트 완료");
+            inspectDOM();
+          }
+        }, 100); // 100ms마다 업데이트
+      };
+
+      // 리셋
+      window.reset = function () {
+        container.innerHTML = "";
+        container._prevVNode = null;
+        statusEl.innerHTML = "";
+        updateStatus("리셋 완료");
+      };
+
+      updateStatus("테스트 준비 완료");
+    </script>
+  </body>
+</html>

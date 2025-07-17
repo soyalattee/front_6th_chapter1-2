@@ -2,25 +2,24 @@ import { addEvent } from "./eventManager";
 
 export function createElement(vNode) {
   if (vNode === null || vNode === undefined || vNode === false || vNode === true) {
-    return { nodeType: Node.TEXT_NODE, textContent: "" };
+    return document.createTextNode("");
   }
   if (typeof vNode === "string") {
-    return { nodeType: Node.TEXT_NODE, textContent: vNode };
+    return document.createTextNode(vNode);
   }
   if (typeof vNode === "number") {
-    return { nodeType: Node.TEXT_NODE, textContent: vNode + "" };
+    return document.createTextNode(vNode + "");
   }
 
   if (Array.isArray(vNode)) {
-    return {
-      nodeType: Node.DOCUMENT_FRAGMENT_NODE,
-      childNodes: vNode.map((child) => createElement(child)),
-    };
+    const fragment = document.createDocumentFragment();
+    vNode.forEach((child) => {
+      const childElement = createElement(child);
+      fragment.appendChild(childElement);
+    });
+    return fragment;
   }
-  if (typeof vNode === "function") {
-    console.log("컴포넌트를 직접 사용할 수 없습니다. 정규화 필요"); //안되는것같다.
-    throw new Error("컴포넌트를 직접 사용할 수 없습니다. 정규화 필요");
-  }
+
   const el = document.createElement(vNode.type);
   if (vNode.props) {
     updateAttributes(el, vNode.props);
