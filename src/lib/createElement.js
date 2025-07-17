@@ -53,10 +53,8 @@ function updateAttributes($el, props) {
       addEvent($el, "keydown", value);
     } else if (key === "onChange") {
       addEvent($el, "change", value);
-    } else if (key === "selected") {
-      value === true ? $el.setAttribute("selected", "") : $el.removeAttribute("selected");
-    } else if (key === "checked") {
-      value === true ? $el.setAttribute("checked", "") : $el.removeAttribute("checked");
+    } else if (typeof value === "boolean") {
+      value === true ? $el.setAttribute(key, "") : $el.removeAttribute(key);
     } else {
       $el.setAttribute(key, value);
     }
