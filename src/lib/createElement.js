@@ -21,10 +21,7 @@ export function createElement(vNode) {
     });
     return el;
   }
-  if (typeof vNode === "function") {
-    console.log("컴포넌트를 직접 사용할 수 없습니다. 정규화 필요"); //안되는것같다.
-    throw new Error("컴포넌트를 직접 사용할 수 없습니다. 정규화 필요");
-  }
+
   const el = document.createElement(vNode.type);
   if (vNode.props) {
     updateAttributes(el, vNode.props);
