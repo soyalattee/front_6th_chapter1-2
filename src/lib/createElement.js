@@ -9,6 +9,18 @@ export function createElement(vNode) {
     const el = document.createTextNode(vNode);
     return el;
   }
+  if (typeof vNode === "number") {
+    const el = document.createTextNode(vNode + "");
+    return el;
+  }
+
+  if (Array.isArray(vNode)) {
+    const el = document.createDocumentFragment();
+    vNode.forEach((child) => {
+      el.appendChild(createElement(child));
+    });
+    return el;
+  }
 
   const el = document.createElement(vNode.type);
   if (vNode.props) {
@@ -20,6 +32,7 @@ export function createElement(vNode) {
       // vNode 객체인 경우 createElement로 재귀 처리
       el.appendChild(createElement(child));
     } else {
+      // 문자열, 숫자 등 primitive 값인 경우 텍스트 노드로 생성
       const textNode = document.createTextNode(child || "");
       el.appendChild(textNode);
     }
